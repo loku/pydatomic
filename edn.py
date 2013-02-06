@@ -2,6 +2,11 @@
 from datetime import datetime
 from uuid import UUID
 
+# from http://stackoverflow.com/questions/1151658/python-hashable-dicts
+class hashable_dict(dict):
+    def __hash__(self):
+        return hash(tuple(sorted(self.items())))
+
 def encode_string(s):
     r"""
     >>> print encode_string(u'"Hello, world"\\n')
@@ -167,7 +172,7 @@ def parser(target, stop=None):
             else:
                 if len(l)%2:
                     raise Exception("Map literal must contain an even number of elements")
-                target.send(dict(zip(l[::2], l[1::2]))) # No frozendict yet
+                target.send(hashable_dict(zip(l[::2], l[1::2]))) # No frozendict yet
         else:
             raise ValueError("Unexpected character in edn", c)
 
