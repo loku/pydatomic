@@ -29,7 +29,8 @@ class Datomic(object):
         return Database(dbname, self)
 
     def transact(self, dbname, data):
-        data = '[%s\n]' % '\n'.join(data)
+        if type(data) == list:
+            data = '[%s\n]' % '\n'.join(data)
         r = requests.post(self.db_url(dbname)+'/', data={'tx-data':data},
                           headers={'Accept':'application/edn'})
         assert r.status_code in (200, 201), (r.status_code, r.text)
