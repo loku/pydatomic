@@ -57,6 +57,13 @@ class Datomic(object):
         assert r.status_code == 200
         return loads(r.content)
 
+    def events(self, dbname):
+        r = requests.get(self.db_url(dbname) + '/-/events', 
+            headers={'Accept':'text/event-stream'}, 
+            stream = True)
+        assert r.status_code == 200
+        return r.raw
+
 if __name__ == '__main__':
     q = """[{
   :db/id #db/id[:db.part/db]
