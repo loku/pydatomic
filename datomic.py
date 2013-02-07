@@ -20,8 +20,8 @@ class Datomic(object):
         self.location = location
         self.storage = storage
 
-    def db_url(self, dbname):
-        return urljoin(self.location, 'data/') + self.storage + '/' + dbname
+    def db_url(self, dbname, path = 'data'):
+        return urljoin(self.location, path + '/') + self.storage + '/' + dbname
 
     def create_database(self, dbname):
         r = requests.post(self.db_url(''), data={'db-name':dbname})
@@ -58,7 +58,7 @@ class Datomic(object):
         return loads(r.content)
 
     def events(self, dbname):
-        r = requests.get(self.db_url(dbname) + '/-/events', 
+        r = requests.get(self.db_url(dbname, path = 'events'), 
             headers={'Accept':'text/event-stream'}, 
             stream = True)
         assert r.status_code == 200
