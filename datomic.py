@@ -27,6 +27,11 @@ def get_line_iterator(line_iterator):
             last_line_name = line_name
             lines.append((line_name, line_data))
 
+def get_db_event_iterator(line_iterator):
+    for line in get_line_iterator(line_iterator):
+        assert len(line) == 1
+        yield loads(line[0][1])
+
 class Database(object):
     def __init__(self, name, conn):
         self.name = name
@@ -85,7 +90,7 @@ class Datomic(object):
         headers = {'Accept':"text/event-stream"},
         stream = True)
         assert r.status_code == 200
-        lines_iter = get_line_iterator(r.iter_lines(chunk_size = 1))
+        lines_iter = get_db_event_iterator(r.iter_lines(chunk_size = 1))
         return lines_iter
 
 if __name__ == '__main__':
