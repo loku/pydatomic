@@ -5,6 +5,28 @@ from urlparse import urljoin
 from edn import loads
 import requests
 
+def get_line_iterator(line_iterator):
+    lines = []
+    last_line_name = None
+    for line in line_iterator:
+        line = line.strip("\n")
+        if line == "":
+            if lines:
+                yield lines
+            lines = []
+            last_line_name = None
+            continue
+        line_name,line_data = line.split(":",1)
+        line_data = line_data[1:]
+        line_name = line_name.strip()
+        if line_name == "":
+            pass
+        elif line_name == last_line_name:
+            lines[-1][1] = lines[-1][1] + line_data
+        else:
+            last_line_name = line_name
+            lines.append((line_name, line_data))
+
 class Database(object):
     def __init__(self, name, conn):
         self.name = name
@@ -59,11 +81,12 @@ class Datomic(object):
         return loads(r.content)
 
     def events(self, dbname):
-        r = requests.get(self.db_url(dbname, path = 'events'), 
-            headers={'Accept':'text/event-stream'}, 
-            stream = True)
+        r = requests.get(url,
+        headers = {'Accept':"text/event-stream"},
+        stream = True)
         assert r.status_code == 200
-        return r.raw
+        lines_iter = get_line_iterator(r.iter_lines(chunk_size = 1))
+        return lines_iter
 
 if __name__ == '__main__':
     q = """[{
