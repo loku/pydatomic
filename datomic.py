@@ -81,7 +81,7 @@ class Datomic(object):
         return loads(r.content)
 
     def events(self, dbname):
-        r = requests.get(url,
+        r = requests.get(self.db_url(dbname, path = "events"),
         headers = {'Accept':"text/event-stream"},
         stream = True)
         assert r.status_code == 200
