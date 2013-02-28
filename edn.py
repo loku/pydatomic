@@ -39,14 +39,15 @@ def inst_handler(time_string):
 
 tag_handlers = {'inst':inst_handler,
                 'uuid':UUID,
-                '<URI':lambda x:x[:-1],
                 'db/fn':lambda x:x}
+
+obj_handlers = {'URI':lambda x:x[0]}
 
 @coroutine
 def tag_handler(tag_name):
     while True:
         c = (yield)
-        if c in STOP_CHARS+'{"[(\\#':
+        if c in STOP_CHARS+'{"[(\\#<':
             break
         tag_name += c
     elements = []
@@ -58,6 +59,26 @@ def tag_handler(tag_name):
         yield tag_handlers[tag_name](elements[0]), True
     else:
         print "No tag handler for %s" % tag_name
+        yield None, True
+
+@coroutine
+def obj_handler():
+    c = (yield)
+    elements = []
+    handler = parser(appender(elements), '>')
+    handler.send(c)
+    try:
+        while True:
+            handler.send((yield))
+    except StopIteration:
+        pass
+    obj_name = elements[0]
+    rest = elements[1:]
+#    raise Exception()
+    if obj_name in obj_handlers:
+        yield obj_handlers[obj_name](rest), True
+    else:
+        print "No obj handler for %s" % obj_name
         yield None, True
 
 @coroutine
@@ -96,7 +117,7 @@ def number_handler(s):
 def symbol_handler(s):
     while 1:
         c = (yield)
-        if c in '}])' + STOP_CHARS:
+        if c in '}])>' + STOP_CHARS:
             yield s, False
         else:
             s += c
@@ -152,10 +173,13 @@ def parser(target, stop=None):
                 handler = symbol_handler(c+c2)
         elif c.isalpha() or c==':':
             handler = symbol_handler(c)
-        elif c in '[({#':
+        elif c in '[({#<':
             if c == '#':
                 c2 = (yield)
-                if c2 != '{':
+                if c2 == '<':
+                    handler = obj_handler()
+                    continue
+                elif c2 != '{':
                     handler = tag_handler(c2)
                     continue
             endchar = {'#':'}', '{':'}', '[':']', '(':')'}[c]
