@@ -40,7 +40,7 @@ def inst_handler(time_string):
 tag_handlers = {'inst':inst_handler,
                 'uuid':UUID,
                 'db/fn':lambda x:x,
-                'deezy/uri':lambda x:x[0]}
+                'deezy/uri':lambda x:x}
 
 obj_handlers = {'URI':lambda x:x[0]}
 
